@@ -18,7 +18,7 @@ variable "name_prefix" {
 variable "private_key_filename" {
   default = "~/.ssh/id_rsa"
 }
-variables "tags" {
+variable "tags" {
   default = {
     "yb_dept"  = "sales"
     "yb_task"  = "cohr-demo"
@@ -49,7 +49,7 @@ locals {
   region      = var.region
   zone        = var.zone
   name_prefix = var.name_prefix
-  private_key_filename = var.private_key_filename
+  private_key_filename = pathexpand(var.private_key_filename)
 
 
   tags = var.tags
