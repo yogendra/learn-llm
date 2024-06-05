@@ -1,0 +1,54 @@
+services:
+  ora:
+    image: container-registry.oracle.com/database/free:latest
+    platform: linux/amd64
+    hostname: ora
+    volumes:
+    - ./:/project
+    environment:
+      - ORACLE_PWD=oracle
+    ports:
+    - 1521:1521
+    - 8080:8080
+
+  yb:
+    hostname: yb
+    image: yugabytedb/yugabyte:2.20.4.0-b50
+    environment:
+      YSQL_PASSWORD: yugabyte
+      PGPASSWORD: yugabyte
+      PGSSLMODE: prefer
+    volumes:
+    - ./:/project
+    command:
+    - sh
+    - -c
+    - |
+      /home/yugabyte/bin/yugabyted start --fault_tolerance=zone --daemon=false --advertise_address=yb  --ysql_enable_auth=true
+    restart: unless-stopped
+    cap_add:
+      - NET_ADMIN
+    ports:
+      - "7000:7000"
+      - "7100:7100"
+      - "9000:9000"
+      - "5433:5433"
+      - "15433:15433"
+    healthcheck:
+      test: ["CMD", "/home/yugabyte/postgres/bin/pg_isready", "-h", "yugabyted-0"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+  voyager:
+    image: yugabytedb/yb-voyager
+    command: tail -f /dev/null
+    volumes:
+    - ./:/project
+  app:
+    
+    build: 
+      context: .       
+    restart: unless-stopped
+    environment:
+      YB_HOST: yb
+      ORA_HOST: ora
